@@ -10,17 +10,17 @@ Basic user information that appears across all data types.
 ```typescript
 interface UserProfile {
     user_id: string;              // Unique Twitter user ID
-    user_name: string;            // User's display name
-    user_screen_name: string;     // User's Twitter handle (@username)
-    user_verified: boolean;       // Whether the account is verified
-    user_bio: string;             // User's profile bio
-    user_followers_count: number; // Number of followers
-    user_following_count: number; // Number of accounts followed
-    user_tweets_count: number;    // Total number of tweets
+    user_name: string;            // User's display name (may change)
+    user_screen_name: string;     // User's Twitter handle (@username) (may change)
+    user_verified: boolean;       // Whether the account is verified (may change)
+    user_bio: string;             // User's profile bio (may change)
+    user_followers_count: number; // Number of followers (changes frequently)
+    user_following_count: number; // Number of accounts followed (changes frequently)
+    user_tweets_count: number;    // Total number of tweets (changes frequently)
     user_created_at: string;      // Account creation date
-    user_location: string;        // User's location
-    user_profile_image_url: string; // Profile image URL
-    user_display_url: string;     // Website URL from profile
+    user_location: string;        // User's location (may change)
+    user_profile_image_url: string; // Profile image URL (may change)
+    user_display_url: string;     // Website URL from profile (may change)
 }
 ```
 
@@ -37,10 +37,10 @@ interface Tweet {
     text: string;                // Tweet content
     created_at: string;          // Tweet creation time (string format, e.g. "2025-04-14 15:31:23")
     created_at_ts: string;       // Tweet creation time (ISO format, e.g. "2025-04-14T15:31:23+08:00")
-    crawl_ts: string;            // Time when the tweet was crawled (ISO format)
+    crawl_ts: string;            // Time when the tweet was crawled (ISO format) (changes on each crawl)
     language: string;            // Tweet language code (e.g. "zh", "en", "ja")
 
-    // Engagement Metrics
+    // Engagement Metrics (all change frequently)
     likes: number;               // Number of likes
     retweets: number;            // Number of retweets
     replies: number;             // Number of replies
@@ -64,36 +64,36 @@ interface Tweet {
     in_reply_to_user_id: string;   // ID of the user being replied to
     in_reply_to_screen_name: string; // Screen name of the user being replied to
     is_quote_status: boolean;    // Whether this is a quote tweet
-    possibly_sensitive: boolean; // Whether the content is sensitive
+    possibly_sensitive: boolean; // Whether the content is sensitive (may change)
 
     // Quoted Tweet Information
     quoted_status_summary?: {
         tweet_id: string;
         text: string;
-        user_name: string;
-        user_screen_name: string;
+        user_name: string;       // (may change)
+        user_screen_name: string; // (may change)
         created_at: string;
         created_at_ts: string;
-        likes: number;
-        retweets: number;
-        replies: number;
-        quotes: number;
-        views: number;           // Number of views of the quoted tweet
+        likes: number;           // (changes frequently)
+        retweets: number;        // (changes frequently)
+        replies: number;         // (changes frequently)
+        quotes: number;          // (changes frequently)
+        views: number;           // (changes frequently)
     };
 
     // Retweet Information
     retweeted_status_summary?: {
         tweet_id: string;
         text: string;
-        user_name: string;
-        user_screen_name: string;
+        user_name: string;       // (may change)
+        user_screen_name: string; // (may change)
         created_at: string;
         created_at_ts: string;
-        likes: number;
-        retweets: number;
-        replies: number;
-        quotes: number;
-        views: number;           // Number of views of the retweeted tweet
+        likes: number;           // (changes frequently)
+        retweets: number;        // (changes frequently)
+        replies: number;         // (changes frequently)
+        quotes: number;          // (changes frequently)
+        views: number;           // (changes frequently)
     };
 }
 ```
@@ -111,10 +111,10 @@ interface Reply {
     text: string;                // Reply content
     created_at: string;          // Reply creation time (string format)
     created_at_ts: string;       // Reply creation time (ISO format)
-    crawl_ts: string;            // Time when the reply was crawled
+    crawl_ts: string;            // Time when the reply was crawled (changes on each crawl)
     language: string;            // Reply language code
 
-    // Engagement Metrics
+    // Engagement Metrics (all change frequently)
     likes: number;               // Number of likes
     retweets: number;            // Number of retweets
     replies: number;             // Number of replies
@@ -142,9 +142,9 @@ interface Reply {
     original_tweet_id: string;   // ID of the original tweet
     quoted_tweet_id: string;     // ID of quoted tweet
     is_quote_status: boolean;    // Whether this is a quote tweet
-    possibly_sensitive: boolean; // Whether the content is sensitive
+    possibly_sensitive: boolean; // Whether the content is sensitive (may change)
 
-    // Thread Statistics
+    // Thread Statistics (all change frequently)
     thread_stats: {
         reply_count: number;         // Total number of replies in the thread
         target_user_replies: number; // Number of replies from the target user
@@ -159,19 +159,19 @@ Represents a user's following or follower relationship.
 ```typescript
 interface Following {
     user_id: string;              // User ID
-    user_name: string;            // Display name
-    user_screen_name: string;     // Twitter handle
-    user_verified: boolean;       // Verification status
-    user_bio: string;             // Profile bio
-    user_followers_count: number; // Number of followers
-    user_following_count: number; // Number of accounts followed
-    user_tweets_count: number;    // Total number of tweets
-    user_created_at: string;      // Account creation date (string format, e.g. "2018-10-17 14:59:23")
-    user_created_at_ts: string;   // Account creation date (ISO format, e.g. "2018-10-17T14:59:23+08:00")
-    crawl_ts: string;             // Time when the data was crawled (ISO format)
-    user_location: string;        // User's location
-    user_profile_image_url: string; // Profile image URL
-    user_display_url: string;     // Website URL from profile
+    user_name: string;            // Display name (may change)
+    user_screen_name: string;     // Twitter handle (may change)
+    user_verified: boolean;       // Verification status (may change)
+    user_bio: string;             // Profile bio (may change)
+    user_followers_count: number; // Number of followers (changes frequently)
+    user_following_count: number; // Number of accounts followed (changes frequently)
+    user_tweets_count: number;    // Total number of tweets (changes frequently)
+    user_created_at: string;      // Account creation date
+    user_created_at_ts: string;   // Account creation date (ISO format)
+    crawl_ts: string;             // Time when the data was crawled (changes on each crawl)
+    user_location: string;        // User's location (may change)
+    user_profile_image_url: string; // Profile image URL (may change)
+    user_display_url: string;     // Website URL from profile (may change)
 }
 ```
 
@@ -192,3 +192,27 @@ The system uses the following JSON files:
 - Boolean flags are used to indicate various states (e.g., `is_reply`, `is_quote_status`)
 - Engagement metrics are stored as numbers
 - The data structure supports both direct tweets and threaded conversations
+
+## Data Update Considerations
+
+The following types of data may change over time and should be considered when updating:
+
+1. **User Information**:
+   - Profile details (name, bio, location, etc.)
+   - Statistics (followers, following, tweet counts)
+   - Verification status
+   - Profile image and website URLs
+
+2. **Engagement Metrics**:
+   - Likes, retweets, replies, quotes, views
+   - Thread statistics (reply counts, depths)
+
+3. **Content Status**:
+   - Sensitive content flags
+   - Crawl timestamps
+
+4. **Quoted/Retweeted Content**:
+   - User information of quoted/retweeted tweets
+   - Engagement metrics of quoted/retweeted tweets
+
+Fields not marked as "may change" or "changes frequently" are generally static and do not need to be updated in subsequent crawls.
