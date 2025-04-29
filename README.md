@@ -1,122 +1,194 @@
-# Twitter Data Collection
+# Twitter Data Structure Documentation
 
-page_limit = 1
+This document describes the data structures used in the Twitter data collection system.
 
-## 1. user_1000994344914972672_followers_cleaned.json
+## Data Structure Overview
 
-**数据模式**：用户关注者数组  
-**格式**：JSON数组，包含多个用户对象  
-- 每个对象代表一个关注用户1000994344914972672的账户
-- 已添加TimescaleDB兼容的时间戳字段
+### 1. User Profile
+Basic user information that appears across all data types.
 
-**主要字段**：
-- `user_id`: 用户唯一标识
-- `user_name`: 用户显示名称
-- `user_screen_name`: 用户Twitter句柄(@后的名称)
-- `user_verified`: 账户是否认证
-- `user_bio`: 用户简介
-- `user_followers_count`/`user_following_count`/`user_tweets_count`: 用户统计数据
-- `user_created_at`: 人类可读的账户创建时间
-- `user_created_at_ts`: TimescaleDB兼容的账户创建时间戳(ISO-8601格式)
-- `crawl_ts`: 数据抓取时间戳(ISO-8601格式)
-- `user_location`: 用户位置
-- `user_profile_image_url`: 个人头像URL
-- `user_display_url`: 用户资料中的网站链接
+```typescript
+interface UserProfile {
+    user_id: string;              // Unique Twitter user ID
+    user_name: string;            // User's display name
+    user_screen_name: string;     // User's Twitter handle (@username)
+    user_verified: boolean;       // Whether the account is verified
+    user_bio: string;             // User's profile bio
+    user_followers_count: number; // Number of followers
+    user_following_count: number; // Number of accounts followed
+    user_tweets_count: number;    // Total number of tweets
+    user_created_at: string;      // Account creation date
+    user_location: string;        // User's location
+    user_profile_image_url: string; // Profile image URL
+    user_display_url: string;     // Website URL from profile
+}
+```
 
-## 2. user_1000994344914972672_followings_cleaned.json
+### 2. Tweet
+Represents a single tweet with all associated metadata.
 
-**数据模式**：用户关注的账户数组  
-**格式**：JSON数组，包含多个用户对象
-- 每个对象代表用户1000994344914972672关注的一个账户
-- 与followers格式一致，也添加了TimescaleDB兼容的时间字段
+```typescript
+interface Tweet {
+    // User Profile Information
+    ...UserProfile;
 
-**主要字段**：
-- 与followers数据结构完全相同
-- 唯一区别是代表的关系方向不同(关注vs被关注)
+    // Tweet Content
+    tweet_id: string;            // Unique tweet ID
+    text: string;                // Tweet content
+    created_at: string;          // Tweet creation time (string format, e.g. "2025-04-14 15:31:23")
+    created_at_ts: string;       // Tweet creation time (ISO format, e.g. "2025-04-14T15:31:23+08:00")
+    crawl_ts: string;            // Time when the tweet was crawled (ISO format)
+    language: string;            // Tweet language code (e.g. "zh", "en", "ja")
 
-## 3. user_1000994344914972672_replies_cleaned.json
+    // Engagement Metrics
+    likes: number;               // Number of likes
+    retweets: number;            // Number of retweets
+    replies: number;             // Number of replies
+    quotes: number;              // Number of quote tweets
+    views: number;               // Number of views
 
-**数据模式**：用户回复推文数组  
-**格式**：JSON数组，包含多个推文对象
-- 包括回复线程中所有推文，按线程分组
-- 附加了线程上下文和互动信息
+    // Media and Tags
+    media_present: boolean;      // Whether the tweet contains media
+    media_urls: string[];        // Array of media URLs
+    hashtags: string[];          // Array of hashtags
+    mentions: string[];          // Array of mentioned users
+    source: string;              // Source of the tweet (e.g. "Twitter Web App", "Twitter for iPhone")
 
-**主要字段**：
-- 用户基本信息(`user_id`, `user_name`等)
-- 推文内容字段:
-  - `tweet_id`: 推文唯一标识
-  - `text`: 推文内容
-  - `created_at`: 人类可读的推文发布时间
-  - `created_at_ts`: TimescaleDB兼容的推文时间戳
-  - `crawl_ts`: 数据抓取时间戳
-  - `language`: 推文语言
-- 互动统计(likes, retweets, replies, quotes, views)
-- 线程相关字段:
-  - `thread_id`: 线程唯一标识
-  - `position_in_thread`: 在线程中的位置
-  - `is_root_tweet`: 是否为线程根推文
-  - `reply_depth`: 回复嵌套深度
-  - `thread_stats`: 线程统计信息，包含:
-    - `reply_count`: 线程中回复数量
-    - `target_user_replies`: 目标用户在该线程的回复数
-    - `max_reply_depth`: 线程最大嵌套深度
-- 回复关系(`in_reply_to_status_id`, `in_reply_to_user_id`等)
-- 内容特征(`media_present`, `media_urls`, `hashtags`, `mentions`等)
+    // Tweet Relationships
+    is_reply: boolean;           // Whether this is a reply
+    is_retweet: boolean;         // Whether this is a retweet
+    quoted_tweet_id: string;     // ID of quoted tweet
+    conversation_id: string;     // ID of the conversation
+    original_tweet_id: string;   // ID of the original tweet
+    in_reply_to_status_id: string; // ID of the tweet being replied to
+    in_reply_to_user_id: string;   // ID of the user being replied to
+    in_reply_to_screen_name: string; // Screen name of the user being replied to
+    is_quote_status: boolean;    // Whether this is a quote tweet
+    possibly_sensitive: boolean; // Whether the content is sensitive
 
-## 4. user_1000994344914972672_tweet_cleaned.json
+    // Quoted Tweet Information
+    quoted_status_summary?: {
+        tweet_id: string;
+        text: string;
+        user_name: string;
+        user_screen_name: string;
+        created_at: string;
+        created_at_ts: string;
+        likes: number;
+        retweets: number;
+        replies: number;
+        quotes: number;
+        views: number;           // Number of views of the quoted tweet
+    };
 
-**数据模式**：用户发布的推文数组  
-**格式**：JSON数组，包含多个推文对象
-- 包括用户发布的所有类型推文(原创、引用、转发)
-- 处理了嵌套内容(引用和转发)
+    // Retweet Information
+    retweeted_status_summary?: {
+        tweet_id: string;
+        text: string;
+        user_name: string;
+        user_screen_name: string;
+        created_at: string;
+        created_at_ts: string;
+        likes: number;
+        retweets: number;
+        replies: number;
+        quotes: number;
+        views: number;           // Number of views of the retweeted tweet
+    };
+}
+```
 
-**主要字段**：
-- 用户基本信息字段(与replies相同)
-- 推文内容字段(与replies相同)
-- 引用和转发特有字段:
-  - `quoted_status_summary`: 引用推文的摘要信息
-  - `retweeted_status_summary`: 转发推文的摘要信息
-  - `is_quote_status`: 是否为引用推文
-  - `is_reply`: 是否为回复
-- 内容特征与互动统计(与replies相同)
-- 时间戳字段(与replies相同)
+### 3. Reply
+Represents a reply in a conversation thread.
 
-## 5. token_BTC_tweets.json (代币示例)
+```typescript
+interface Reply {
+    // User Profile Information
+    ...UserProfile;
 
-**数据模式**：关于比特币(BTC)的推文数组  
-**格式**：JSON数组，包含多个推文对象
+    // Reply Content
+    tweet_id: string;            // Unique reply ID
+    text: string;                // Reply content
+    created_at: string;          // Reply creation time (string format)
+    created_at_ts: string;       // Reply creation time (ISO format)
+    crawl_ts: string;            // Time when the reply was crawled
+    language: string;            // Reply language code
 
-**主要字段**：
-- 用户信息字段(与其他数据集类似)
-- 推文内容字段:
-  - `tweet_id`: 推文唯一标识
-  - `text`: 推文内容
-  - `created_at`: 推文发布时间
-  - `created_at_ts`: 推文时间戳
-  - `language`: 推文语言
-- 互动统计:
-  - `like_count`: 点赞数
-  - `reply_count`: 回复数
-  - `retweet_count`: 转发数
-  - `quote_count`: 引用数
-  - `view_count`: 浏览数
-- 媒体内容:
-  - `media_present`: 是否包含媒体
-  - `media_urls`: 媒体文件URL数组
-- 内容特征:
-  - `hashtags`: 标签数组
-  - `mentions`: 提及用户数组
-  - `source`: 推文来源
-- 推文关系:
-  - `is_reply`: 是否为回复
-  - `quoted_tweet_id`: 引用的推文ID
-  - `conversation_id`: 对话ID
-  - `original_tweet_id`: 原始推文ID
-  - `in_reply_to_status_id`: 回复的推文ID
-  - `in_reply_to_user_id`: 回复的用户ID
-  - `in_reply_to_screen_name`: 回复的用户屏幕名
-  - `is_quote_status`: 是否为引用推文
-  - `possibly_sensitive`: 是否可能敏感
-  - `quoted_status_summary`: 引用推文的摘要
-  - `retweeted_status_summary`: 转发推文的摘要
+    // Engagement Metrics
+    likes: number;               // Number of likes
+    retweets: number;            // Number of retweets
+    replies: number;             // Number of replies
+    quotes: number;              // Number of quote tweets
+    views: number;               // Number of views
 
+    // Media and Tags
+    media_present: boolean;      // Whether the reply contains media
+    media_urls: string[];        // Array of media URLs
+    hashtags: string[];          // Array of hashtags
+    mentions: string[];          // Array of mentioned users
+    source: string;              // Source of the reply
+
+    // Reply Relationships
+    is_target_user: boolean;     // Whether the reply is from the target user
+    tweet_type: string;          // Type of tweet ("raw tweet", "reply", "quote")
+    thread_id: string;           // ID of the conversation thread
+    position_in_thread: number;  // Position in the thread
+    is_root_tweet: boolean;      // Whether this is the root tweet
+    reply_depth: number;         // Depth in the reply chain
+    in_reply_to_status_id: string; // ID of the tweet being replied to
+    in_reply_to_user_id: string;   // ID of the user being replied to
+    in_reply_to_screen_name: string; // Screen name of the user being replied to
+    conversation_id: string;     // ID of the conversation
+    original_tweet_id: string;   // ID of the original tweet
+    quoted_tweet_id: string;     // ID of quoted tweet
+    is_quote_status: boolean;    // Whether this is a quote tweet
+    possibly_sensitive: boolean; // Whether the content is sensitive
+
+    // Thread Statistics
+    thread_stats: {
+        reply_count: number;         // Total number of replies in the thread
+        target_user_replies: number; // Number of replies from the target user
+        max_reply_depth: number;     // Maximum depth of replies in the thread
+    };
+}
+```
+
+### 4. Following/Follower
+Represents a user's following or follower relationship.
+
+```typescript
+interface Following {
+    user_id: string;              // User ID
+    user_name: string;            // Display name
+    user_screen_name: string;     // Twitter handle
+    user_verified: boolean;       // Verification status
+    user_bio: string;             // Profile bio
+    user_followers_count: number; // Number of followers
+    user_following_count: number; // Number of accounts followed
+    user_tweets_count: number;    // Total number of tweets
+    user_created_at: string;      // Account creation date (string format, e.g. "2018-10-17 14:59:23")
+    user_created_at_ts: string;   // Account creation date (ISO format, e.g. "2018-10-17T14:59:23+08:00")
+    crawl_ts: string;             // Time when the data was crawled (ISO format)
+    user_location: string;        // User's location
+    user_profile_image_url: string; // Profile image URL
+    user_display_url: string;     // Website URL from profile
+}
+```
+
+## Data Files
+
+The system uses the following JSON files:
+
+1. `user_*_tweet_cleaned.json` - Contains the user's tweets
+2. `user_*_replies_cleaned.json` - Contains replies to the user's tweets
+3. `user_*_followings_cleaned.json` - Contains the user's following list
+4. `user_*_followers_cleaned.json` - Contains the user's followers list
+5. `token_*_tweets.json` - Contains tweets related to specific tokens (e.g., BTC)
+
+## Notes
+
+- All timestamps are stored in both string format and ISO format (with `_ts` suffix)
+- Media content is stored as an array of URLs
+- Boolean flags are used to indicate various states (e.g., `is_reply`, `is_quote_status`)
+- Engagement metrics are stored as numbers
+- The data structure supports both direct tweets and threaded conversations
